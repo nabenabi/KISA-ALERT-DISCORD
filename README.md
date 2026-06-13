@@ -1,2 +1,8 @@
 # KISA-ALERT-DISCORD
-KISA ALERT for discord
+
+## 안내
+최근 정보보안위협을 당하는 일이 많이 발생하고 있습니다.
+그로인해 정보보안의 중요성이 높아지고 있어서 해당 프로젝트를 만들게 되었습니다.
+KISA에서는 RSS기능을 지원합니다.
+
+RSS(Really Simple Syndication)는 웹사이트에서 제공하는 콘텐츠를 보다 간편하게 구독할 수 있도록 도와주는 기술입니다.
