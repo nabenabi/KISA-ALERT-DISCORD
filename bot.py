@@ -102,7 +102,7 @@ async def check_kisa_rss():
     save_seen(seen)
 
 
-    @bot.tree.command(name="초기설정", description="KISA 최신 보안공지 10개를 전송하고 초기 seen 목록을 설정합니다.")
+@bot.tree.command(name="초기설정", description="KISA 최신 보안공지 10개를 전송하고 초기 seen 목록을 설정합니다.")
 @app_commands.checks.has_permissions(administrator=True)
 async def initial_setup(interaction: discord.Interaction):
     await interaction.response.defer(ephemeral=True)
