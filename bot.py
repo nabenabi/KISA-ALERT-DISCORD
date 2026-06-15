@@ -150,9 +150,19 @@ async def initial_setup(interaction: discord.Interaction):
 @initial_setup.error
 async def initial_setup_error(interaction: discord.Interaction, error):
     if isinstance(error, app_commands.errors.MissingPermissions):
-        await interaction.response.send_message("관리자 권한이 있는 사람만 사용할 수 있습니다.", ephemeral=True)
+        message = "관리자 권한이 있는 사람만 사용할 수 있습니다."
     else:
-        await interaction.response.send_message(f"오류 발생: {error}", ephemeral=True)
+        message = f"오류 발생: {error}"
+
+    try:
+        if interaction.response.is_done():
+            await interaction.followup.send(message, ephemeral=True)
+        else:
+            await interaction.response.send_message(message, ephemeral=True)
+    except discord.NotFound:
+        print(f"Interaction 만료됨: {message}")
+    except Exception as e:
+        print(f"에러 핸들러에서도 오류 발생: {e}")
 
 @bot.event
 async def on_ready():
