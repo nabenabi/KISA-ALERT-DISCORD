@@ -15,7 +15,7 @@ DISCORD_CHANNEL_ID = int(os.getenv("DISCORD_CHANNEL_ID"))
 SEEN_FILE = "seen_kisa.json"
 
 intents = discord.Intents.default()
-discord = commands.Bot(command_prefix="!", intents=intents)
+bot = commands.Bot(command_prefix="!", intents=intents)
 
 
 def load_seen():
@@ -45,7 +45,7 @@ async def check_kisa_rss():
         print("KISA_RSS_URL이 없습니다.")
         return
 
-    channel = discord.get_channel(DISCORD_CHANNEL_ID)
+    channel = bot.get_channel(DISCORD_CHANNEL_ID)
 
     if channel is None:
         print("Discord 채널을 찾을 수 없습니다.")
@@ -84,7 +84,7 @@ async def check_kisa_rss():
 
     # 오래된 것부터 전송
     for ntt_id, title, link, published in reversed(new_entries):
-        embed = bot.Embed(
+        embed = discord.Embed(
             title=title,
             url=link,
             description="KISA 보호나라 보안공지에 새 글이 등록되었습니다.",
@@ -101,12 +101,12 @@ async def check_kisa_rss():
     save_seen(seen)
 
 
-@discord.event
+@bot.event
 async def on_ready():
-    print(f"로그인 완료: {discord.user}")
+    print(f"로그인 완료: {bot.user}")
 
     if not check_kisa_rss.is_running():
         check_kisa_rss.start()
 
 
-discord.run(TOKEN)
+bot.run(TOKEN)
