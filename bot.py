@@ -3,6 +3,7 @@ import json
 import feedparser
 import discord
 from discord.ext import commands, tasks
+from discord import app_commands
 from dotenv import load_dotenv
 from urllib.parse import urlparse, parse_qs
 
@@ -101,9 +102,67 @@ async def check_kisa_rss():
     save_seen(seen)
 
 
+    @bot.tree.command(name="초기설정", description="KISA 최신 보안공지 10개를 전송하고 초기 seen 목록을 설정합니다.")
+@app_commands.checks.has_permissions(administrator=True)
+async def initial_setup(interaction: discord.Interaction):
+    await interaction.response.defer(ephemeral=True)
+
+    if not KISA_RSS_URL:
+        await interaction.followup.send("KISA_RSS_URL이 설정되어 있지 않습니다.", ephemeral=True)
+        return
+
+    feed = feedparser.parse(KISA_RSS_URL)
+    entries = feed.entries[:10]
+
+    if not entries:
+        await interaction.followup.send("RSS에서 공지를 찾지 못했습니다.", ephemeral=True)
+        return
+
+    seen = load_seen()
+
+    for entry in reversed(entries):
+        link = getattr(entry, "link", None)
+        title = getattr(entry, "title", "제목 없음")
+        published = getattr(entry, "published", "게시일 확인 불가")
+
+        if not link:
+            continue
+
+        ntt_id = get_ntt_id(link)
+
+        embed = discord.Embed(
+            title=title,
+            url=link,
+            description="KISA 보호나라 보안공지입니다.",
+            color=0xE74C3C,
+        )
+        embed.add_field(name="게시일", value=published, inline=True)
+        embed.add_field(name="출처", value="KISA 보호나라", inline=True)
+
+        await interaction.channel.send(embed=embed)
+        seen.add(ntt_id)
+
+    save_seen(seen)
+
+    await interaction.followup.send("초기설정 완료: 최신 보안공지 10개를 전송하고 seen 목록에 저장했습니다.", ephemeral=True)
+
+
+@initial_setup.error
+async def initial_setup_error(interaction: discord.Interaction, error):
+    if isinstance(error, app_commands.errors.MissingPermissions):
+        await interaction.response.send_message("관리자 권한이 있는 사람만 사용할 수 있습니다.", ephemeral=True)
+    else:
+        await interaction.response.send_message(f"오류 발생: {error}", ephemeral=True)
+
 @bot.event
 async def on_ready():
     print(f"로그인 완료: {bot.user}")
+
+    try:
+        synced = await bot.tree.sync()
+        print(f"슬래시 명령어 동기화 완료: {len(synced)}개")
+    except Exception as e:
+        print(f"슬래시 명령어 동기화 실패: {e}")
 
     if not check_kisa_rss.is_running():
         check_kisa_rss.start()
